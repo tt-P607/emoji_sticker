@@ -1,0 +1,29 @@
+{
+    "name": "emoji_sticker",
+    "version": "1.0.0",
+    "description": "通用表情包管理与发送插件，支持智能选择和自动注册",
+    "author": "MoFox Studio",
+    "dependencies": {
+        "plugins": [],
+        "components": []
+    },
+    "include": [
+        {
+            "component_type": "action",
+            "component_name": "send_emoji",
+            "dependencies": []
+        },
+        {
+            "component_type": "service",
+            "component_name": "emoji_service",
+            "dependencies": []
+        },
+        {
+            "component_type": "config",
+            "component_name": "config",
+            "dependencies": []
+        }
+    ],
+    "entry_point": "plugin.py",
+    "min_core_version": "1.0.0"
+}
