@@ -75,6 +75,19 @@ class EmojiStickerConfig(BaseConfig):
             description="用于选择的模型任务名（对应 model.toml 中的 task 配置）",
         )
 
+    @config_section("steal")
+    class StealSection(SectionBase):
+        """偷表情包配置。"""
+
+        enabled: bool = Field(
+            default=False,
+            description="是否启用偷表情包功能（自动收集聊天中收到的表情包）",
+        )
+        use_framework_description: bool = Field(
+            default=True,
+            description="优先使用框架 MediaManager 已识别的描述（避免重复 VLM 调用）",
+        )
+
     @config_section("debug")
     class DebugSection(SectionBase):
         """调试配置。"""
@@ -87,4 +100,5 @@ class EmojiStickerConfig(BaseConfig):
     general: GeneralSection = Field(default_factory=GeneralSection)
     scan: ScanSection = Field(default_factory=ScanSection)
     selection: SelectionSection = Field(default_factory=SelectionSection)
+    steal: StealSection = Field(default_factory=StealSection)
     debug: DebugSection = Field(default_factory=DebugSection)

@@ -12,6 +12,7 @@ from src.kernel.concurrency import get_task_manager
 
 from .actions.send_emoji import SendEmojiAction
 from .config import EmojiStickerConfig
+from .handlers.steal_emoji import StealEmojiHandler
 from .services.emoji_service import EmojiService
 
 logger = get_logger("emoji_sticker")
@@ -161,4 +162,5 @@ class EmojiStickerPlugin(BasePlugin):
         return [
             SendEmojiAction,
             EmojiService,
+            StealEmojiHandler,
         ]

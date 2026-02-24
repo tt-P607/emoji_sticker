@@ -123,13 +123,25 @@ async def scan_and_register(config: EmojiStickerConfig, service: EmojiService) -
         logger.debug("扫描完成，无新表情包文件")
         return
 
-    logger.info(f"发现 {len(image_files)} 个待注册的表情包文件")
+    # 单次扫描最多注册 20 个，避免大量文件一次性涌入导致阻塞
+    max_per_scan = 20
+
+    logger.info(
+        f"发现 {len(image_files)} 个待注册的表情包文件"
+        + (f"，本次最多处理 {max_per_scan} 个" if len(image_files) > max_per_scan else "")
+    )
 
     registered_count = 0
     skipped_count = 0
     failed_count = 0
 
     for file_path in image_files:
+        # 达到单次注册上限后停止，剩余文件下次扫描处理
+        if registered_count >= max_per_scan:
+            remaining = len(image_files) - (registered_count + skipped_count + failed_count)
+            if remaining > 0:
+                logger.info(f"已达单次注册上限 ({max_per_scan})，剩余 {remaining} 个留待下次扫描")
+            break
         try:
             # 计算文件哈希
             file_hash = await asyncio.to_thread(compute_file_hash, file_path)

@@ -171,10 +171,12 @@ class SendEmojiAction(BaseAction):
                 return False, "读取表情包文件失败"
 
             stream_id = self.chat_stream.stream_id
+            # 历史记录只保留精炼描述，截取第一句或前50字
+            short_desc = selected_emoji.description.split("\n")[0][:50]
             success = await send_emoji(
                 emoji_data=image_data,
                 stream_id=stream_id,
-                processed_plain_text=f"[表情包: {selected_emoji.description}]",
+                processed_plain_text=f"[表情包: {short_desc}]",
             )
 
             if success:
