@@ -28,8 +28,10 @@ logger = get_logger("emoji_sticker.action")
 class SendEmojiAction(BaseAction):
     """根据意图描述，智能选择并发送一个表情包。
 
-    由任意 Chatter 通过 Tool Calling 调用，接收意图参数，
-    从已注册表情包中筛选候选、构建选择 prompt、调用 LLM 选择最佳表情包后发送。
+    使用要求：
+    - **触发时机**：想用表情包配合文字、或单独发一个表情包时；情绪渲染（开心/无语/害羞/调皮）用表情包效果最佳。
+    - **合理频率**：不用每条消息都配表情包，自然点缀即可，避免刷屏。
+    - **与文字搭配**：可以先发文字再配一个表情包，也可单独只发表情包。
     """
 
     action_name = "send_emoji"
@@ -171,10 +173,12 @@ class SendEmojiAction(BaseAction):
                 return False, "读取表情包文件失败"
 
             stream_id = self.chat_stream.stream_id
+            # 历史记录只保留精炼描述，截取第一句或前50字
+            short_desc = selected_emoji.description.split("\n")[0][:50]
             success = await send_emoji(
                 emoji_data=image_data,
                 stream_id=stream_id,
-                processed_plain_text=f"[表情包: {selected_emoji.description}]",
+                processed_plain_text=f"[表情包: {short_desc}]",
             )
 
             if success:
