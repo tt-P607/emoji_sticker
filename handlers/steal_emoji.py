@@ -18,7 +18,6 @@ from typing import Any
 from src.app.plugin_system.api.log_api import get_logger
 from src.core.components.base.event_handler import BaseEventHandler
 from src.core.components.types import EventType
-from src.kernel.event import EventDecision
 
 from ..config import EmojiStickerConfig
 from ..services.emoji_service import EmojiService
@@ -41,51 +40,49 @@ class StealEmojiHandler(BaseEventHandler):
 
     async def execute(
         self,
-        event_name: str,
-        params: dict[str, Any],
-    ) -> tuple[EventDecision, dict[str, Any]]:
+        kwargs: dict[str, Any] | None,
+    ) -> tuple[bool, bool, str | None]:
         """处理消息事件，检测并收集表情包。
 
         Args:
-            event_name: 触发本处理器的事件名称
-            params: 事件参数，包含 message / envelope / adapter_signature
+            kwargs: 事件参数，包含 message / envelope / adapter_signature
 
         Returns:
-            tuple[EventDecision, dict[str, Any]]: 决策与参数
+            (执行是否成功, 是否拦截消息, 可选的日志消息)
         """
-        if not params:
-            return EventDecision.PASS, params
+        if not kwargs:
+            return False, False, None
 
         # 检查功能是否启用
         config = getattr(self.plugin, "config", None)
         if not isinstance(config, EmojiStickerConfig):
-            return EventDecision.PASS, params
+            return False, False, None
         if not config.general.enabled or not config.steal.enabled:
-            return EventDecision.PASS, params
+            return False, False, None
 
         service = getattr(self.plugin, "emoji_service", None)
         if not isinstance(service, EmojiService):
-            return EventDecision.PASS, params
+            return False, False, None
 
-        message = params.get("message")
+        message = kwargs.get("message")
         if not message:
-            return EventDecision.PASS, params
+            return False, False, None
 
         # 从 message.extra 获取媒体列表
         media_list: list[dict[str, str]] = getattr(message, "extra", {}).get("media", [])
         if not media_list:
-            return EventDecision.PASS, params
+            return False, False, None
 
         # 过滤出表情包类型
         emoji_media = [m for m in media_list if m.get("type") == "emoji"]
         if not emoji_media:
-            return EventDecision.PASS, params
+            return False, False, None
 
         # 容量检查
         current_count = await service.get_registered_count()
         max_count = config.general.max_registered
         if current_count >= max_count and not config.general.do_replace:
-            return EventDecision.PASS, params
+            return False, False, None
 
         for media_item in emoji_media:
             try:
@@ -93,7 +90,7 @@ class StealEmojiHandler(BaseEventHandler):
             except Exception as e:
                 logger.debug(f"收集表情包失败: {e}")
 
-        return EventDecision.SUCCESS, params
+        return True, False, None
 
     async def _steal_one(
         self,
